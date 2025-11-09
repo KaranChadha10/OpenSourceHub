@@ -18,9 +18,17 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider =>
             provider.GetRequiredService<ApplicationDbContext>());
 
+        //Redis Cache
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration.GetConnectionString("Redis");
+            options.InstanceName = "OpenSourceHub";
+        });
+
         // Services
         services.AddScoped<IGitHubService, GitHubService>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<ICacheService, CacheService>();
 
         return services;
     }
