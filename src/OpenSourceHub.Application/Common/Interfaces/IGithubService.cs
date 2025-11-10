@@ -9,4 +9,7 @@ public interface IGitHubService
     //Issues
     Task<IssueSearchResultDto> SearchIssuesAsync(IssueSearchFilters filters, CancellationToken cancellationToken = default);
     Task<Guid> EnsureRepositoryExistsAsync(string fullName, CancellationToken cancellationToken = default);
+
+    //Contributions
+    Task<List<ContributionDTO>> FetchUserPullRequestsAsync(string username, string accessToken, CancellationToken cancellationToken = default);
 }

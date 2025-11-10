@@ -5,6 +5,7 @@ using OpenSourceHub.Application.Common;
 using OpenSourceHub.Application.Common.Interfaces;
 using OpenSourceHub.Application.Features;
 using OpenSourceHub.Application.Features.Auth;
+using OpenSourceHub.Domain.Enum;
 
 namespace OpenSourceHub.Infrastructure.Services;
 
@@ -335,5 +336,105 @@ public class GitHubService : IGitHubService
         }
 
         return (string.Empty, string.Empty);
+    }
+
+    public async Task<List<ContributionDTO>> FetchUserPullRequestsAsync(
+     string username,
+     string accessToken,
+     CancellationToken cancellationToken = default)
+    {
+        var client = new GitHubClient(new ProductHeaderValue("OpenSourceHub"))
+        {
+            Credentials = new Credentials(accessToken)
+        };
+
+        var contributions = new List<ContributionDTO>();
+
+        try
+        {
+            var searchRequest = new SearchIssuesRequest
+            {
+                Author = username,
+                Type = IssueTypeQualifier.PullRequest,
+                PerPage = 100
+            };
+
+            Console.WriteLine($"🔍 Fetching PRs for user: {username}");
+
+            var searchResult = await client.Search.SearchIssues(searchRequest);
+
+            Console.WriteLine($"📊 Found {searchResult.TotalCount} total PRs");
+
+            foreach (var pr in searchResult.Items)
+            {
+                try
+                {
+                    // Extract repository info from PR URL
+                    string repoFullName = "";
+                    string repoUrl = "";
+
+                    if (!string.IsNullOrEmpty(pr.HtmlUrl))
+                    {
+                        var uri = new Uri(pr.HtmlUrl);
+                        var pathParts = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+                        if (pathParts.Length >= 3 && pathParts[2] == "pull")
+                        {
+                            var owner = pathParts[0];
+                            var repo = pathParts[1];
+                            repoFullName = $"{owner}/{repo}";
+                            repoUrl = $"https://github.com/{owner}/{repo}";
+                        }
+                    }
+
+                    if (string.IsNullOrEmpty(repoFullName))
+                    {
+                        Console.WriteLine($"⚠️ Skipping PR #{pr.Number} - could not parse repository");
+                        continue;
+                    }
+
+                    // Determine status
+                    var status = pr.State.Value == ItemState.Open
+                        ? ContributionStatus.Open
+                        : (pr.PullRequest?.MergedAt != null ? ContributionStatus.Merged : ContributionStatus.Closed);
+
+                    contributions.Add(new ContributionDTO
+                    {
+                        PullRequestId = pr.Id,
+                        PullRequestNumber = pr.Number,
+                        Title = pr.Title ?? string.Empty,
+                        Description = pr.Body,
+                        Status = status,
+                        RepositoryFullName = repoFullName,
+                        RepositoryUrl = repoUrl,
+                        PrUrl = pr.HtmlUrl ?? string.Empty,
+                        GitHubCreatedAt = pr.CreatedAt.UtcDateTime,
+                        GitHubMergedAt = pr.PullRequest?.MergedAt?.UtcDateTime,
+                        GitHubClosedAt = pr.ClosedAt?.UtcDateTime,
+                        CommentsCount = pr.Comments,
+                        // Note: GitHub Search API doesn't provide file change details
+                        // We'd need to fetch individual PR details for that
+                        FilesChanged = 0,
+                        Additions = 0,
+                        Deletions = 0
+                    });
+
+                    await EnsureRepositoryExistsAsync(repoFullName, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ Error processing PR #{pr.Number}: {ex.Message}");
+                }
+            }
+
+            Console.WriteLine($"✅ Successfully processed {contributions.Count} contributions");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error fetching PRs: {ex.Message}");
+            throw;
+        }
+
+        return contributions;
     }
 }
