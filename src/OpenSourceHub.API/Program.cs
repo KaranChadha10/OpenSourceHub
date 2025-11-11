@@ -104,4 +104,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// ✅ ADD THIS - Redirect root to Swagger
+app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
+
 app.Run();

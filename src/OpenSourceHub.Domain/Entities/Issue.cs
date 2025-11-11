@@ -24,7 +24,7 @@ public class Issue : BaseEntity
     public DateTime LastSyncedAt { get; private set; }
 
     //Navigation Properties
-    public Repository Repository { get; private set; } = null;
+    public Repository Repository { get; private set; } = null!;
 
     private Issue() { }
 

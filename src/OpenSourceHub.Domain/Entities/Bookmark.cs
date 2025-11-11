@@ -11,7 +11,7 @@ public class Bookmark : BaseEntity
 
     //Navigation Properties
     public User User { get; private set; } = null!;
-    public Repository Repository { get; private set; } = null;
+    public Repository Repository { get; private set; } = null!;
 
     private Bookmark() { }
 

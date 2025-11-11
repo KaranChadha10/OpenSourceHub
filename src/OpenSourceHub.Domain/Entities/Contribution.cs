@@ -30,7 +30,7 @@ public class Contribution : BaseEntity
 
     //Navigation Properties
     public User User { get; private set; } = null!;
-    public Repository Repository { get; private set; } = null;
+    public Repository Repository { get; private set; } = null!;
 
     private Contribution() { }
 
