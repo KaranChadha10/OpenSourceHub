@@ -1,17 +1,21 @@
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './pages/Home';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">
-          OpenSourceHub 🚀
-        </h1>
-        <p className="text-gray-700">
-          Frontend initialized with React, TypeScript, and Tailwind CSS!
-        </p>
-      </div>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          {/* Placeholder routes for now */}
+          <Route path="issues" element={<div className="p-10 text-center">Issues Page (Coming Soon)</div>} />
+          <Route path="repos" element={<div className="p-10 text-center">Repositories Page (Coming Soon)</div>} />
+          <Route path="login" element={<div className="p-10 text-center">Login Page (Coming Soon)</div>} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

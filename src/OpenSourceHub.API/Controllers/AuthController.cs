@@ -42,9 +42,8 @@ public class AuthController : ControllerBase
             var command = new GitHubCallbackCommand(code);
             var result = await _mediator.Send(command);
 
-            // In production, you'd redirect to frontend with token
-            // For now, return JSON for testing
-            return Ok(result);
+            // Redirect to frontend with token
+            return Redirect($"http://localhost:5173/auth/callback?token={result.Token}");
         }
         catch (Exception ex)
         {
